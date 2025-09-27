@@ -1,0 +1,34 @@
+﻿<Window x:Class="StructSync.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:StructSync"
+        mc:Ignorable="d"
+        Title="StructSync" Height="450" Width="800" WindowState="Maximized">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Button Content="Source Machine"  Cursor="Hand" FontSize="16" FontWeight="Bold" Click="sourcemachine_Click" Name="sourcemachine"/>
+            </Grid>
+            <Grid Grid.Column="1">
+                <Button Content="Target Machine" FontSize="16" FontWeight="Bold" Cursor="Hand" Click="targetmachine_Click" Name="targetmachine"/>
+            </Grid>
+        </Grid>
+
+        <Grid Name="maingrid" Grid.Row="1">
+            
+        </Grid>
+    </Grid>
+</Window>
