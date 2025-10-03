@@ -40,6 +40,8 @@ namespace StructSync
         private void targetmachine_Click(object sender, RoutedEventArgs e)
         {
             maingrid.Children.Clear();
+            TargetMachineUserControl targetMachineControl = new TargetMachineUserControl();
+            maingrid.Children.Add(targetMachineControl);
             sourcemachine.Background = Brushes.LightGray;
 
             targetmachine.Background = Brushes.LightBlue;
