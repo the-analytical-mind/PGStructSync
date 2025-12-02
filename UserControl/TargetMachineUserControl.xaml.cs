@@ -215,12 +215,12 @@ namespace StructSync.UserControl
                     IsExpanded = true // expanded by default
                 };
 
-                if (!string.IsNullOrWhiteSpace(schema.Query))
+                // attach schema query (if present) to item Tag so clicking it shows the query in txt_querytool
+                var schemaQuery = string.IsNullOrWhiteSpace(schema.Query) ? null : schema.Query.Trim();
+                if (schemaQuery != null)
                 {
-                    var q = new TextBlock { Text = schema.Query, TextWrapping = TextWrapping.Wrap };
-                    var qItem = new TreeViewItem { Header = CreateHeader("Schema DDL", bold: false), IsExpanded = false };
-                    qItem.Items.Add(q);
-                    schemaItem.Items.Add(qItem);
+                    schemaItem.Tag = schemaQuery;
+                    schemaItem.Selected += TreeViewItem_Selected;
                 }
 
                 // Tables
@@ -235,6 +235,14 @@ namespace StructSync.UserControl
                             IsExpanded = false
                         };
 
+                        // attach table query
+                        var tableQuery = string.IsNullOrWhiteSpace(table.Query) ? null : table.Query.Trim();
+                        if (tableQuery != null)
+                        {
+                            tableItem.Tag = tableQuery;
+                            tableItem.Selected += TreeViewItem_Selected;
+                        }
+
                         // Columns
                         if (table.Columns != null && table.Columns.Count > 0)
                         {
@@ -242,8 +250,15 @@ namespace StructSync.UserControl
                             foreach (var col in table.Columns)
                             {
                                 var colHeader = $"{col.ColumnName} : {col.DataType}{(col.IsPrimary ? " [PK]" : string.Empty)}";
-                                var colItem = new TreeViewItem { Header = CreateHeader(colHeader, col?.Status) , IsExpanded = false };
-                                colItem.Items.Add(new TextBlock { Text = col.Query, TextWrapping = TextWrapping.Wrap });
+                                var colItem = new TreeViewItem { Header = CreateHeader(colHeader, col?.Status), IsExpanded = false };
+
+                                var colQuery = string.IsNullOrWhiteSpace(col.Query) ? null : col.Query.Trim();
+                                if (colQuery != null)
+                                {
+                                    colItem.Tag = colQuery;
+                                    colItem.Selected += TreeViewItem_Selected;
+                                }
+
                                 colsRoot.Items.Add(colItem);
                             }
                             tableItem.Items.Add(colsRoot);
@@ -256,7 +271,14 @@ namespace StructSync.UserControl
                             foreach (var idx in table.Indexes)
                             {
                                 var idxItem = new TreeViewItem { Header = CreateHeader(idx.IndexName, idx?.Status) , IsExpanded = false };
-                                idxItem.Items.Add(new TextBlock { Text = idx.Query, TextWrapping = TextWrapping.Wrap });
+
+                                var idxQuery = string.IsNullOrWhiteSpace(idx.Query) ? null : idx.Query.Trim();
+                                if (idxQuery != null)
+                                {
+                                    idxItem.Tag = idxQuery;
+                                    idxItem.Selected += TreeViewItem_Selected;
+                                }
+
                                 idxRoot.Items.Add(idxItem);
                             }
                             tableItem.Items.Add(idxRoot);
@@ -268,18 +290,19 @@ namespace StructSync.UserControl
                             var fkRoot = new TreeViewItem { Header = CreateHeader($"Foreign Keys ({table.ForeignKeys.Count})"), IsExpanded = false };
                             foreach (var fk in table.ForeignKeys)
                             {
-                                fkRoot.Items.Add(new TreeViewItem { Header = CreateHeader(fk) });
+                                var fkText = fk ?? string.Empty;
+                                var fkItem = new TreeViewItem { Header = CreateHeader(fkText) };
+                                var fkQuery = string.IsNullOrWhiteSpace(fkText) ? null : fkText.Trim();
+                                if (fkQuery != null)
+                                {
+                                    fkItem.Tag = fkQuery;
+                                    fkItem.Selected += TreeViewItem_Selected;
+                                }
+                                fkRoot.Items.Add(fkItem);
                             }
                             tableItem.Items.Add(fkRoot);
                         }
 
-                        // Full table DDL
-                        if (!string.IsNullOrWhiteSpace(table.Query))
-                        {
-                            var tQueryItem = new TreeViewItem { Header = CreateHeader("Table DDL"), IsExpanded = false };
-                            tQueryItem.Items.Add(new TextBlock { Text = table.Query, TextWrapping = TextWrapping.Wrap });
-                            tableItem.Items.Add(tQueryItem);
-                        }
 
                         tablesRoot.Items.Add(tableItem);
                     }
@@ -289,11 +312,18 @@ namespace StructSync.UserControl
                 // Views
                 if (schema.Views != null && schema.Views.Count > 0)
                 {
-                    var viewsRoot = new TreeViewItem { Header = CreateHeader($"Views ({schema.Views.Count})"), IsExpanded = true };
+                    var viewsRoot = new TreeViewItem { Header = CreateHeader($"Views ({schema.Views.Count})", bold: true), IsExpanded = true };
                     foreach (var v in schema.Views)
                     {
                         var vItem = new TreeViewItem { Header = CreateHeader($"View: {v.ViewName}", v?.Status), IsExpanded = false };
-                        vItem.Items.Add(new TextBlock { Text = v.Query, TextWrapping = TextWrapping.Wrap });
+
+                        var vQuery = string.IsNullOrWhiteSpace(v.Query) ? null : v.Query.Trim();
+                        if (vQuery != null)
+                        {
+                            vItem.Tag = vQuery;
+                            vItem.Selected += TreeViewItem_Selected;
+                        }
+
                         viewsRoot.Items.Add(vItem);
                     }
                     schemaItem.Items.Add(viewsRoot);
@@ -302,11 +332,18 @@ namespace StructSync.UserControl
                 // Functions
                 if (schema.Functions != null && schema.Functions.Count > 0)
                 {
-                    var funcsRoot = new TreeViewItem { Header = CreateHeader($"Functions ({schema.Functions.Count})"), IsExpanded = true };
+                    var funcsRoot = new TreeViewItem { Header = CreateHeader($"Functions ({schema.Functions.Count})", bold: true), IsExpanded = true };
                     foreach (var f in schema.Functions)
                     {
                         var fItem = new TreeViewItem { Header = CreateHeader($"Function: {f.FunctionName}", f?.Status), IsExpanded = false };
-                        fItem.Items.Add(new TextBlock { Text = f.Query, TextWrapping = TextWrapping.Wrap });
+
+                        var fQuery = string.IsNullOrWhiteSpace(f.Query) ? null : f.Query.Trim();
+                        if (fQuery != null)
+                        {
+                            fItem.Tag = fQuery;
+                            fItem.Selected += TreeViewItem_Selected;
+                        }
+
                         funcsRoot.Items.Add(fItem);
                     }
                     schemaItem.Items.Add(funcsRoot);
@@ -315,11 +352,18 @@ namespace StructSync.UserControl
                 // Procedures
                 if (schema.Procedures != null && schema.Procedures.Count > 0)
                 {
-                    var procsRoot = new TreeViewItem { Header = CreateHeader($"Procedures ({schema.Procedures.Count})"), IsExpanded = true };
+                    var procsRoot = new TreeViewItem { Header = CreateHeader($"Procedures ({schema.Procedures.Count})", bold: true), IsExpanded = true };
                     foreach (var p in schema.Procedures)
                     {
                         var pItem = new TreeViewItem { Header = CreateHeader($"Procedure: {p.ProcedureName}", p?.Status), IsExpanded = false };
-                        pItem.Items.Add(new TextBlock { Text = p.Query, TextWrapping = TextWrapping.Wrap });
+
+                        var pQuery = string.IsNullOrWhiteSpace(p.Query) ? null : p.Query.Trim();
+                        if (pQuery != null)
+                        {
+                            pItem.Tag = pQuery;
+                            pItem.Selected += TreeViewItem_Selected;
+                        }
+
                         procsRoot.Items.Add(pItem);
                     }
                     schemaItem.Items.Add(procsRoot);
@@ -329,6 +373,35 @@ namespace StructSync.UserControl
             }
 
             grd_displayresult.Children.Add(tree);
+        }
+
+        // When a TreeViewItem with an attached query is selected, show it in txt_querytool.
+        private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
+        {
+            if (sender is TreeViewItem tvi)
+            {
+                var query = tvi.Tag as string;
+                try
+                {
+                    
+                    // If txt_querytool exists in XAML, set its Text to the query. Clear if null.
+                    if (this.FindName("txt_querytool") is TextBox txt)
+                    {
+                        txt.Text = query ?? string.Empty;
+                        executequerybutton.IsEnabled = true;
+                    }
+                }
+                finally
+                {
+                    // stop bubbling so parent selected handlers don't override child selection
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private async void executequerybutton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿
-using StructSync.ViewModels;
+﻿using StructSync.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -285,19 +284,20 @@ namespace StructSync.BussinessLogicLayer
                 if (s.Type.Equals("FUNCTION", StringComparison.OrdinalIgnoreCase))
                 {
                     // Extract schema and function name (strip params)
-                    var m = Regex.Match(s.FullText, @"CREATE\s+FUNCTION\s+(?<schema>\w+)\.(?<rest>[^\s(]+)", RegexOptions.IgnoreCase);
-                    if (!m.Success) continue;
-                    var schemaName = m.Groups["schema"].Value;
-                    var fullname = m.Groups["rest"].Value;
-                    // rest may include parentheses, remove them
-                    var fnName = fullname.Split('(')[0].Trim('"');
-
-                    EnsureSchema(schemas, schemaName).Functions.Add(new FunctionDetailInfo
+                    var m = Regex.Match(s.FullText, @"CREATE\s+FUNCTION\s+(?<schema>\w+)\.(?<name>""?[^""\s(]+""?)\s*(?<params>\([^\)]*\))", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                    if (m.Success)
                     {
-                        FunctionName = fnName,
-                        Query = s.FullText.Trim(),
-                        Status = SchemaStatus.Matched
-                    });
+                        var schemaName = m.Groups["schema"].Value;
+                        var fnNameRaw = m.Groups["name"].Value.Trim('"');
+                        var paramList = m.Groups["params"].Value; // includes parentheses or empty
+                        var keyName = $"{fnNameRaw}{paramList}";
+                        EnsureSchema(schemas, schemaName).Functions.Add(new FunctionDetailInfo
+                        {
+                            FunctionName = keyName,
+                            Query = s.FullText.Trim(),
+                            Status = SchemaStatus.Matched
+                        });
+                    }
                     continue;
                 }
 

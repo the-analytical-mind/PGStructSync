@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace StructSync.BussinessLogicLayer
 {
@@ -35,8 +36,19 @@ namespace StructSync.BussinessLogicLayer
                 // Tables
                 if (s.Tables != null)
                 {
+                    var dup = (ts.Tables ?? Enumerable.Empty<TableDetailInfo>())
+                        .GroupBy(t => (t.TableName ?? string.Empty).Trim(), StringComparer.OrdinalIgnoreCase)
+                        .Where(g => g.Count() > 1)
+                        .Select(g => new { Name = g.Key, Count = g.Count(), Items = g.ToList() })
+                        .ToList();
+                    if (dup.Any())
+                    {
+                        // log dup info for investigation (schema name, duplicate table names, source file, etc.)
+                    }
+                    // defensive: keep first occurrence if duplicates exist
                     var tgtTables = (ts.Tables ?? new List<TableDetailInfo>())
-                        .ToDictionary(t => t.TableName, StringComparer.OrdinalIgnoreCase);
+                        .GroupBy(t => (t.TableName ?? string.Empty).Trim(), StringComparer.OrdinalIgnoreCase)
+                        .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
                     foreach (var tbl in s.Tables)
                     {
@@ -154,8 +166,9 @@ namespace StructSync.BussinessLogicLayer
                 // Functions
                 if (s.Functions != null)
                 {
-                    var tgtFns = (ts.Functions ?? new List<FunctionDetailInfo>())
-                        .ToDictionary(f => f.FunctionName, StringComparer.OrdinalIgnoreCase);
+                    var tgtFns = (ts.Functions ?? Enumerable.Empty<FunctionDetailInfo>())
+                        .GroupBy(f => (f.FunctionName ?? string.Empty).Trim(), StringComparer.OrdinalIgnoreCase)
+                        .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
                     foreach (var f in s.Functions)
                     {
@@ -255,3 +268,4 @@ namespace StructSync.BussinessLogicLayer
         }
     }
 }
+
