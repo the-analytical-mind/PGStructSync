@@ -51,6 +51,16 @@
 
                 </StackPanel>
             </Border>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid x:Name="grd_displayresult" Grid.Column="0">
+
+                </Grid>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>
